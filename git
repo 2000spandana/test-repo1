@@ -1,0 +1,11 @@
+heyy this is git commands:
+
+git stash-undo uncommitted changes
+
+git revert-undo commited changes
+
+git restore-restore detleted file/restore unstaged file
+
+git rm --cached filename- to unsatge/do not add file
+
+git reset-if i commited so many files,after releasing that i have commited wrong code then git reset commit-id from  where i need to undo the changes.

@@ -1,0 +1,62 @@
+
+#!/bin/bash
+
+# Installing mail utility
+yum install mailx -y -q -e 0
+
+LOG="/tmp/alert.log"
+UP_LOG="/tmp/up.log"
+DN_LOG="/tmp/down.log"
+
+echo "" >$UP_LOG
+echo "" >$DN_LOG
+
+# Calculate CPU Usage
+CPU_USAGE=$(cat /proc/stat | awk '/cpu/{printf("%.2f\n"), ($2+$4)*100/($2+$4+$5)}' | head -1)
+
+# CPU Threshold
+cpu_threshold=75.00
+
+# Checking if CPU usage is greater than the threshold
+if (( $(echo "$CPU_USAGE >= $cpu_threshold" | bc -l) )); then
+    # Log the CPU usage
+    echo "$(tput setaf 1)CPU usage is above threshold: $CPU_USAGE%$(tput sgr0)" >> "$LOG"
+
+    # Sending an email alert
+    echo "CPU USAGE is above threshold: $CPU_USAGE%" | mail -s "CPU Usage Alert" spandana.s@apollodart.com >> "$DN_LOG"
+fi
+
+# Calculate Memory Usage
+Memory_Usage=$(free | awk '/Mem/{printf("%.2f"), $3/$2*100}')
+
+# Set Memory Threshold
+threshold=75.00
+
+# Checking if memory usage is greater than the threshold
+if (( $(echo "$Memory_Usage >= $threshold" | bc -l) )); then
+    # Send an email alert
+    echo "Memory usage is above threshold: $Memory_Usage%" | mail -s "Memory Usage Alert" spandana.s@apollodart.com >> "$LOG"
+fi
+
+# Calculate disk usage
+Disk_usage=$(df -Ph | sed '1d' | awk '{ if($5 > 80) print $0;}')
+
+# Checking if disk usage is above the threshold
+if (( $(echo "$Disk_usage" | wc -l) > 80 )); then
+    echo "$(tput setaf 1)Disk usage is above threshold:$(tput sgr0)"
+    echo "$Disk_usage" >> "$LOG"
+    echo "Disk usage is above threshold:" | mail -s "Disk Usage Alert" spandana.s@apollodart.com >> "$DN_LOG"
+fi
+
+# Calculate swap usage
+SWAP_USAGE=$(free | awk '/Swap/{printf("%.2f"), $3/$2*100}')
+
+# Set swap threshold
+swap_threshold=75.00
+
+# Checking if swap usage is above the threshold
+if (( $(echo "$SWAP_USAGE >= $swap_threshold" | bc -l) )); then
+    echo "$(tput setaf 1)Swap usage is above threshold: $SWAP_USAGE%$(tput sgr0)" >> "$LOG"
+    echo "Swap usage is above threshold: $SWAP_USAGE%" | mail -s "Swap Usage Alert" spandana.s@apollodart.com >> "$DN_LOG"
+fi
+
